@@ -1,0 +1,7 @@
+".\Objects\main.obj",
+".\Objects\I2C.obj",
+".\Objects\QN8027.obj",
+".\Objects\Delay.obj",
+".\Objects\NUMLED.obj" 
+TO ".\Objects\QN8027" 
+PRINT(".\Listings\QN8027.m51") RAMSIZE(256) 

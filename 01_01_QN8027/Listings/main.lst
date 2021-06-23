@@ -1,0 +1,112 @@
+C51 COMPILER V9.55   MAIN                                                                  01/02/2021 06:05:39 PAGE 1   
+
+
+C51 COMPILER V9.55, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE MAIN\main.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\MAIN;.\I2C;.\QN8027;.\Syst
+                    -em;.\NUMLED) DEBUG OBJECTEXTEND PRINT(.\Listings\main.lst) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include "main.h"
+   2          //定义全局变量
+   3          unsigned int Freq = 870;
+   4          //按键标志位相关变量
+   5          bit FLAG_V_UP,FLAG_V_DOWN,FLAG_F_UP,FLAG_F_DOWN;
+   6          //自定义函数
+   7          void KEY_SCAN(void);
+   8          
+   9          void main()
+  10          {
+  11   1          VOIDE_1 = VOIDE_2 = F_1 = F_2 = F_3 = 0;//让所有共阳极数码管的公共端处于低电平
+  12   1          QN8027_Init();
+  13   1          QN8027SetFreq(Freq);
+  14   1          while(1)
+  15   1          {
+  16   2              KEY_SCAN();//扫描按键是否被按下
+  17   2              Display_Frequency(Freq);
+  18   2          }
+  19   1      }
+  20          /*******************************************************************************
+  21          * 函数名         :KEY_SCAN()
+  22          * 函数功能       :扫描四个按键是哪个被按下
+  23          * 输入           :无
+  24          * 输出           :无
+  25          *******************************************************************************/
+  26          void KEY_SCAN(void)
+  27          {
+  28   1          /*-------------SW3_F+（频率加）------------------*/
+  29   1          if(FLAG_F_UP == 0)
+  30   1          {
+  31   2              if(KEY_F_UP == 0)
+  32   2              {
+  33   3                  Delay_Ms_(5);//去抖延时5ms
+  34   3                  if(KEY_F_UP == 0)
+  35   3                  {
+  36   4                      FLAG_F_UP = 1;//改变标志位状态
+  37   4                      if(Freq < 1080)
+  38   4                      {
+  39   5                          Freq = Freq + 10;
+  40   5                          //重新设置频率
+  41   5                          QN8027SetFreq(Freq);
+  42   5                      }
+  43   4                      else if(Freq >=1080)
+  44   4                      {Freq = 1080;}
+  45   4                  }
+  46   3              }
+  47   2          }
+  48   1          else
+  49   1          {
+  50   2              if(KEY_F_UP == 1)
+  51   2              {
+  52   3                  Delay_Ms_(5);//去抖延时5ms
+  53   3                  if(KEY_F_UP == 1)
+  54   3                  {FLAG_F_UP = 0;}//清除松手标志位
+C51 COMPILER V9.55   MAIN                                                                  01/02/2021 06:05:39 PAGE 2   
+
+  55   3              }
+  56   2          }
+  57   1          /*-------------SW4_F-（频率减）------------------*/
+  58   1          if(FLAG_F_DOWN == 0)
+  59   1          {
+  60   2              if(KEY_F_DOWN == 0)
+  61   2              {
+  62   3                  Delay_Ms_(5);//去抖延时5ms
+  63   3                  if(KEY_F_DOWN == 0)
+  64   3                  {
+  65   4                      FLAG_F_DOWN = 1;//改变标志位状态
+  66   4                      if(Freq > 870)
+  67   4                      {
+  68   5                          Freq = Freq - 10;
+  69   5                          //重新设置频率
+  70   5                          QN8027SetFreq(Freq);
+  71   5                      }
+  72   4                      else if(Freq <= 870)
+  73   4                      {Freq = 870;}
+  74   4                  }
+  75   3              }
+  76   2          }
+  77   1          else
+  78   1          {
+  79   2              if(KEY_F_DOWN == 1)
+  80   2              {
+  81   3                  Delay_Ms_(5);//去抖延时5ms
+  82   3                  if(KEY_F_DOWN == 1)
+  83   3                  {FLAG_F_DOWN = 0;}//清除松手标志位
+  84   3              }
+  85   2          }
+  86   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    195    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      2    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      4    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

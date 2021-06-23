@@ -1,0 +1,205 @@
+C51 COMPILER V9.55   MAIN                                                                  01/02/2021 06:06:30 PAGE 1   
+
+
+C51 COMPILER V9.55, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE Listings\MAIN\main.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Listings\I2C;.\Li
+                    -stings\MAIN;.\Listings\RDA5807;.\Listings\System;.\Listings\NUMLED) DEBUG OBJECTEXTEND PRINT(.\Listings\main.lst) OBJECT
+                    -(.\Objects\main.obj)
+
+line level    source
+
+   1          #include "main.h"
+   2          
+   3          //定义全局变量
+   4          //RDA5807的设置相关变量
+   5          int FRE_RDA5807 = 8700;//设置频率
+   6          unsigned int RSSI_RDA5807 = 0;//读取信号强度
+   7          unsigned char VOL_RDA5807 = 5;//设置音量
+   8          //按键标志位相关变量
+   9          bit FLAG_V_UP,FLAG_V_DOWN,FLAG_F_UP,FLAG_F_DOWN;
+  10          
+  11          //自定义函数
+  12          void KEY_SCAN(void);//扫描按键状态
+  13          
+  14          //主函数
+  15          void main()
+  16          {
+  17   1          VOIDE_1 = VOIDE_2 = F_1 = F_2 = F_3 = 0;//让所有共阳极数码管的公共端处于低电平
+  18   1          Uart_init();//初始化串口
+  19   1          TI = 1;//TI设为1是为了让printf函数正常运行
+  20   1          //初始化RDA5807
+  21   1          if(RDA5807P_Intialization())
+  22   1          {
+  23   2              printf("FM Init OK!\n");
+  24   2              Delay_Ms_(600);
+  25   2              Delay_Ms_(600);
+  26   2          }
+  27   1          else//初始化失败则串口提示失败后数码管不显示
+  28   1          {
+  29   2              printf("FM Init Fail!\n");
+  30   2              while(1);
+  31   2          }
+  32   1          //设置初始频率
+  33   1              RDA5807P_SetFreq(FRE_RDA5807);
+  34   1          printf("FM_FRE = %d\n",FRE_RDA5807);
+  35   1          //设置当前频率信号强度
+  36   1          RSSI_RDA5807 = RDA5807P_GetSigLvl();
+  37   1          printf("FM_RSSI = %d\n",RSSI_RDA5807);
+  38   1          //设置当前音量值
+  39   1          RDA5807P_SetVolumeLevel(VOL_RDA5807);
+  40   1          printf("FM_VOL = %X\n",VOL_RDA5807);
+  41   1          //初始化通过进入大循环
+  42   1          while(1)
+  43   1          {        
+  44   2              Display_Voide(VOL_RDA5807);//显示音量
+  45   2              Display_Frequency(FRE_RDA5807);//显示频率
+  46   2              KEY_SCAN();//扫描按键是否被按下
+  47   2          }
+  48   1      }
+  49          /*******************************************************************************
+  50          * 函数名         :KEY_SCAN()
+  51          * 函数功能       :扫描四个按键是哪个被按下
+  52          * 输入           :无
+  53          * 输出           :无
+C51 COMPILER V9.55   MAIN                                                                  01/02/2021 06:06:30 PAGE 2   
+
+  54          *******************************************************************************/
+  55          void KEY_SCAN(void)
+  56          {
+  57   1          /*-------------SW1_V+（音量加）------------------*/
+  58   1          if(FLAG_V_UP == 0)//松手标志位为0说明已经松手
+  59   1          {
+  60   2              if(KEY_V_UP == 0)//如果按键被按下
+  61   2              {
+  62   3                  Delay_Ms_(5);//去抖延时5ms
+  63   3                  if(KEY_V_UP == 0)
+  64   3                  {
+  65   4                      FLAG_V_UP = 1;//改变标志位状态
+  66   4                      if(VOL_RDA5807 < 15)
+  67   4                      {                    
+  68   5                          VOL_RDA5807++;
+  69   5                          //重新设置当前音量值
+  70   5                          RDA5807P_SetVolumeLevel(VOL_RDA5807);
+  71   5                      }
+  72   4                      else if(VOL_RDA5807 >=15)
+  73   4                      {VOL_RDA5807 = 15;}//音量的最大值为15
+  74   4                      
+  75   4                  }
+  76   3              }
+  77   2          }
+  78   1          else //松手标志位位1说明还未松手
+  79   1          {
+  80   2              if(KEY_V_UP == 1) //说明按键已经松手
+  81   2              {
+  82   3                  Delay_Ms_(5);//去抖延时5ms
+  83   3                  if(KEY_V_UP == 1)
+  84   3                  { FLAG_V_UP = 0; }//清除松手标志位
+  85   3              }
+  86   2          }
+  87   1          /*-------------SW2_V-（音量减）------------------*/
+  88   1          if(FLAG_V_DOWN == 0)
+  89   1          {
+  90   2              if(KEY_V_DOWN == 0)
+  91   2              {
+  92   3                  Delay_Ms_(5);//去抖延时5ms
+  93   3                  if(KEY_V_DOWN == 0)
+  94   3                  {
+  95   4                      FLAG_V_DOWN = 1;//改变标志位状态
+  96   4                      if(VOL_RDA5807 > 0)
+  97   4                      {
+  98   5                          VOL_RDA5807--;
+  99   5                          //重新设置当前音量值
+ 100   5                          RDA5807P_SetVolumeLevel(VOL_RDA5807);
+ 101   5                      }
+ 102   4                      else if(VOL_RDA5807 == 0)
+ 103   4                      {VOL_RDA5807 = 0;}
+ 104   4                  }
+ 105   3              }
+ 106   2          }
+ 107   1          else
+ 108   1          {
+ 109   2              if(KEY_V_DOWN == 1)
+ 110   2              {
+ 111   3                  Delay_Ms_(5);//去抖延时5ms
+ 112   3                  if(KEY_V_DOWN == 1)
+ 113   3                  {FLAG_V_DOWN = 0;}//清除松手标志位
+ 114   3              }
+ 115   2          }
+C51 COMPILER V9.55   MAIN                                                                  01/02/2021 06:06:30 PAGE 3   
+
+ 116   1          /*-------------SW3_F+（频率加）------------------*/
+ 117   1          if(FLAG_F_UP == 0)
+ 118   1          {
+ 119   2              if(KEY_F_UP == 0)
+ 120   2              {
+ 121   3                  Delay_Ms_(5);//去抖延时5ms
+ 122   3                  if(KEY_F_UP == 0)
+ 123   3                  {
+ 124   4                      FLAG_F_UP = 1;//改变标志位状态
+ 125   4                      if(FRE_RDA5807 < 10800)
+ 126   4                      {
+ 127   5                          FRE_RDA5807 = FRE_RDA5807 + 100;
+ 128   5                          //重新设置频率
+ 129   5                          RDA5807P_SetFreq(FRE_RDA5807);
+ 130   5                      }
+ 131   4                      else if(FRE_RDA5807 >=10800)
+ 132   4                      {FRE_RDA5807 = 10800;}
+ 133   4                  }
+ 134   3              }
+ 135   2          }
+ 136   1          else
+ 137   1          {
+ 138   2              if(KEY_F_UP == 1)
+ 139   2              {
+ 140   3                  Delay_Ms_(5);//去抖延时5ms
+ 141   3                  if(KEY_F_UP == 1)
+ 142   3                  {FLAG_F_UP = 0;}//清除松手标志位
+ 143   3              }
+ 144   2          }
+ 145   1          /*-------------SW4_F-（频率减）------------------*/
+ 146   1          if(FLAG_F_DOWN == 0)
+ 147   1          {
+ 148   2              if(KEY_F_DOWN == 0)
+ 149   2              {
+ 150   3                  Delay_Ms_(5);//去抖延时5ms
+ 151   3                  if(KEY_F_DOWN == 0)
+ 152   3                  {
+ 153   4                      FLAG_F_DOWN = 1;//改变标志位状态
+ 154   4                      if(FRE_RDA5807 > 8700)
+ 155   4                      {
+ 156   5                          FRE_RDA5807 = FRE_RDA5807 - 100;
+ 157   5                          //重新设置频率
+ 158   5                          RDA5807P_SetFreq(FRE_RDA5807);
+ 159   5                      }
+ 160   4                      else if(FRE_RDA5807 <= 8700)
+ 161   4                      {FRE_RDA5807 = 8700;}
+ 162   4                  }
+ 163   3              }
+ 164   2          }
+ 165   1          else
+ 166   1          {
+ 167   2              if(KEY_F_DOWN == 1)
+ 168   2              {
+ 169   3                  Delay_Ms_(5);//去抖延时5ms
+ 170   3                  if(KEY_F_DOWN == 1)
+ 171   3                  {FLAG_F_DOWN = 0;}//清除松手标志位
+ 172   3              }
+ 173   2          }
+ 174   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+C51 COMPILER V9.55   MAIN                                                                  01/02/2021 06:06:30 PAGE 4   
+
+   CODE SIZE        =    423    ----
+   CONSTANT SIZE    =     68    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      5    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      4    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

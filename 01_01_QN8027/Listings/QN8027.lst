@@ -1,0 +1,104 @@
+C51 COMPILER V9.55   QN8027                                                                01/02/2021 06:05:40 PAGE 1   
+
+
+C51 COMPILER V9.55, COMPILATION OF MODULE QN8027
+OBJECT MODULE PLACED IN .\Objects\QN8027.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE QN8027\QN8027.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\MAIN;.\I2C;.\QN8027;.\
+                    -System;.\NUMLED) DEBUG OBJECTEXTEND PRINT(.\Listings\QN8027.lst) OBJECT(.\Objects\QN8027.obj)
+
+line level    source
+
+   1          #include "QN8027.h"
+   2          /*******************************************************************************
+   3          * 函数名         :QN8027Write1Byte(unsigned char Reg,Vaule)
+   4          * 函数功能       :向QN8027写一个字节的信号
+   5          * 输入           :Reg寄存器地址，Value数据值
+   6          * 输出           :I2C应答信号
+   7          *******************************************************************************/
+   8          bit QN8027Write1Byte(unsigned char Reg,Vaule)
+   9          {
+  10   1          bit ACK_Return;//设置一个变量用于检测应答信号
+  11   1          IIC_Start();
+  12   1          ACK_Return = IIC_Write_Byte(0X58);//要向QN8027写东西要先发0x58
+  13   1          if(ACK_Return == 0)
+  14   1          {
+  15   2              ACK_Return = IIC_Write_Byte(Reg);//在有应答后写入需要发送数据的地址
+  16   2              if(ACK_Return == 0)
+  17   2              {
+  18   3                  ACK_Return = IIC_Write_Byte(Vaule);//获得应答后写入该地址对应的数字
+  19   3              }
+  20   2          }
+  21   1          IIC_Stop();
+  22   1          return !ACK_Return;
+  23   1      }
+  24          /*******************************************************************************
+  25          * 函数名         :QN8027SetReg(unsigned char Regis_Addr,Data)
+  26          * 函数功能       :向QN8027特地的寄存器写一个字节的信号
+  27          * 输入           :Regis_Addr寄存器地址，Data数据值
+  28          * 输出           :I2C应答信号
+  29          *******************************************************************************/
+  30          bit QN8027SetReg(unsigned char Regis_Addr,Data)
+  31          {
+  32   1          unsigned count = 8;
+  33   1          while(--count)
+  34   1          {
+  35   2              if(QN8027Write1Byte(Regis_Addr,Data)) break;
+  36   2          }
+  37   1          if(!count)return 0;
+  38   1          else return 1;
+  39   1      }
+  40          /*******************************************************************************
+  41          * 函数名         :QN8027_Init()
+  42          * 函数功能       :初始化QN8027
+  43          * 输入           :无
+  44          * 输出           :无
+  45          *******************************************************************************/
+  46          void QN8027_Init()
+  47          {
+  48   1          QN8027SetReg(0x00,0x81);//复位所有寄存器的值
+  49   1          Delay_Ms_(20);
+  50   1          QN8027SetReg(0x03,0x10);//在XTL1和XTL2上接入时钟
+  51   1          QN8027SetReg(0x04,0x34);//选择12MHz晶振，选择1dB的TX数字增益，输入阻抗选用40KΩ
+  52   1          QN8027SetReg(0x00,0x41);//FSM重置
+  53   1          QN8027SetReg(0x00,0x01);
+  54   1          Delay_Ms_(20);
+C51 COMPILER V9.55   QN8027                                                                01/02/2021 06:05:40 PAGE 2   
+
+  55   1          QN8027SetReg(0x01,0x7e);//设置发射频率
+  56   1          QN8027SetReg(0x02,0xA9);//设置TX导频增益
+  57   1          QN8027SetReg(0x00,0x22);//设置QN8027开始发射频率
+  58   1          Delay_Ms_(20);
+  59   1      }
+  60          /*******************************************************************************
+  61          * 函数名         :QN8027_Init()
+  62          * 函数功能       :初始化QN8027
+  63          * 输入           :无
+  64          * 输出           :无
+  65          *******************************************************************************/
+  66          void QN8027SetFreq(unsigned int freq)
+  67          {
+  68   1          unsigned int a;
+  69   1          unsigned char b,c;
+  70   1          a = (freq - 760)*2;
+  71   1          c = ((unsigned char *)&a)[1];
+  72   1          
+  73   1          b = 0x20|0x04|((unsigned char *)&a)[0];
+  74   1          Delay_Ms_(20);
+  75   1          QN8027SetReg(0x00,b);
+  76   1          QN8027SetReg(0x01,c);
+  77   1          Delay_Ms_(20);
+  78   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    224    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      12
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----       1
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
